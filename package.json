@@ -1,0 +1,20 @@
+{
+  "name": "Desafio-02",
+  "version": "1.0.0",
+  "description": "Segundo desafio do curso de bootcamp da Rocketseat",
+  "main": "server.js",
+  "author": "Dyego Soriano <dyegodf2@gmail.com>",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "eslint": "^6.8.0",
+    "nodemon": "^2.0.2",
+    "sequelize-cli": "^5.5.1",
+    "sucrase": "^3.13.0"
+  },
+  "scripts": {
+    "start": "nodemon src/server.js"
+  }
+}
