@@ -22,7 +22,7 @@ Esse projeto também será utilizado para a certificação do bootcamp, então b
 
 ### Autenticação
 
-Permita que um usuário se autentique em sua aplicação utilizando e- mail e senha.
+Permita que um usuário se autentique em sua aplicação utilizando e-mail e senha.
 
 - A autenticação deve ser feita utilizando JWT.
 
