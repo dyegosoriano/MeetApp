@@ -2,9 +2,10 @@
     <img alt="GoStack" src="./readme-img/GoStack.png" width="200px" />
 </h1>
 
-<h3 align="center">Desafio 1: Conceitos do NodeJS</h3>
+<h3 align="center">Desafio 2: Continuando aplicação</h3>
 
 ## :rocket: Sobre o desafio
+
 Crie uma aplicação do zero utilizando [Express](https://expressjs.com/pt-br/).
 
 Nessa aplicação configure as seguintes ferramentas:
