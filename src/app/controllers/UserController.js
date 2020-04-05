@@ -5,7 +5,7 @@ class Controller {
     // Cadastrar usuário
     const { name, email, password } = request.body
 
-    const user = await User.create({ name, email, password_has: password })
+    const user = await User.create({ name, email, password })
 
     return response.json(user)
   }
