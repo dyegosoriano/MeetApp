@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken'
+import * as Yup from 'yup'
 
+// Arquivo de configuração do token JWT
 import authConfig from '../../config/auth'
 
 import User from '../models/User'
@@ -9,6 +11,15 @@ class SessionController {
   async store (request, response) {
     // Buscando dados da requisição
     const { email, password } = request.body
+
+    // Validando campos de entrada com Yup
+    const schema = Yup.object().shape({
+      email: Yup.string().required().email(),
+      password: Yup.string().required()
+    })
+
+    // Tratamento de erro de validação do Yup
+    if (!(await schema.isValid({ password, email }))) response.status(400).json({ error: 'Validations fails' })
 
     // Vefiricando a existência do email no banco de dados
     const user = await User.findOne({ where: { email } })
