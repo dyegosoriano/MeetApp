@@ -1,6 +1,6 @@
 import User from '../models/User'
 
-class Controller {
+class UserController {
   async store (request, response) {
     // Cadastrar usuário
     const { name, email, password } = request.body
@@ -31,4 +31,4 @@ class Controller {
   }
 }
 
-export default new Controller()
+export default new UserController()
