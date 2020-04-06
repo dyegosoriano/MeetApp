@@ -27,8 +27,8 @@ class UserController {
   }
 
   async update (request, response) {
-    // Buscando dados da erquisição
-    const { email, oldPassword } = request.body
+    // Buscando dados da requisição
+    const data = request.body
 
     // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
     const user = await User.findByPk(request.userId)
@@ -50,18 +50,18 @@ class UserController {
     }
 
     // Vefiricando a existência do email no banco de dados para atualização
-    if (email !== user.email) {
-      const userExists = await User.findOne({ where: { email } })
+    if (data.email !== user.email) {
+      const userExists = await User.findOne({ where: { email: data.email } })
       if (userExists) response.status(400).json({ error: 'User already exists.' })
     }
 
     // Verificando se a senha é a mesma cadastrada no banco de dados
-    if (oldPassword && !(await user.checkPassword(oldPassword))) {
+    if (data.oldPassword && !(await user.checkPassword(data.oldPassword))) {
       return response.status(400).json({ error: 'Password does not match' })
     }
 
     // Atualizando e retornando os dados do usuário
-    const { name } = await user.update(request.body)
+    const { name, email } = await user.update(request.body)
 
     // Retornando dados
     return response.json({
