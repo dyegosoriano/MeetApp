@@ -27,8 +27,47 @@ class UserController {
   }
 
   async update (request, response) {
-    // Alterar usuário
-    return response.json()
+    // Buscando dados da erquisição
+    const { email, oldPassword } = request.body
+
+    // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
+    const user = await User.findByPk(request.userId)
+
+    // Validando campos de entrada
+    const schema = Yup.object().shape({
+      name: Yup.string(),
+      email: Yup.string().email(),
+      oldPassword: Yup.string().min(6),
+      password: Yup.string().min(6)
+        .when('oldPassword', (oldPassword, field) => oldPassword ? field.required() : field),
+      confirmPassword: Yup.string()
+        .when('password', (password, field) => password ? field.required().oneOf([Yup.ref('password')]) : field)
+    })
+
+    // Tratamento de erro de validação do Yup
+    if (!(await schema.isValid(request.body))) {
+      return response.status(400).json({ error: 'Validations fails' })
+    }
+
+    // Vefiricando a existência do email no banco de dados para atualização
+    if (email !== user.email) {
+      const userExists = await User.findOne({ where: { email } })
+      if (userExists) response.status(400).json({ error: 'User already exists.' })
+    }
+
+    // Verificando se a senha é a mesma cadastrada no banco de dados
+    if (oldPassword && !(await user.checkPassword(oldPassword))) {
+      return response.status(400).json({ error: 'Password does not match' })
+    }
+
+    // Atualizando e retornando os dados do usuário
+    const { name } = await user.update(request.body)
+
+    // Retornando dados
+    return response.json({
+      name,
+      email
+    })
   }
 
   async index (request, response) {
