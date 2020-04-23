@@ -8,14 +8,9 @@ class App {
   constructor () {
     this.server = express()
 
-    // this.database()
     this.middlewares()
     this.routes()
   }
-
-  // database () {
-  // Config database
-  // }
 
   middlewares () {
     this.server.use(express.json())

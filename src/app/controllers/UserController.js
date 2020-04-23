@@ -4,9 +4,6 @@ import User from '../models/User'
 
 class UserController {
   async store (request, response) {
-    // Buscando dados da erquisição
-    const { name, email, password } = request.body
-
     // Validando campos de entrada com Yup
     const schema = Yup.object().shape({
       name: Yup.string().required(),
@@ -15,15 +12,19 @@ class UserController {
     })
 
     // Tratamento de erro de validação do Yup
-    if (!(await schema.isValid({ name, email, password }))) response.status(400).json({ error: 'Validations fails' })
+    if (!(await schema.isValid(request.body))) response.status(400).json({ error: 'Validations fails' })
 
     // Verificando se usuário ja existe
-    const userExist = await User.findOne({ where: { email } })
-    if (userExist) response.status(400).json({ error: 'User already exists.' })
+    const emailExist = await User.findOne({ where: { email: request.body.email } })
+    if (emailExist) response.status(400).json({ error: 'The email already exists in the database.' })
 
     // Cadastrando usuário
-    const user = await User.create({ name, email, password })
-    return response.json(user)
+    const { id, name, email } = await User.create(request.body)
+    return response.json({
+      id,
+      name,
+      email
+    })
   }
 
   async update (request, response) {
@@ -37,6 +38,7 @@ class UserController {
     const schema = Yup.object().shape({
       name: Yup.string(),
       email: Yup.string().email(),
+      avatar_id: Yup.number(),
       oldPassword: Yup.string().min(6),
       password: Yup.string().min(6)
         .when('oldPassword', (oldPassword, field) => oldPassword ? field.required() : field),
@@ -51,8 +53,8 @@ class UserController {
 
     // Vefiricando a existência do email no banco de dados para atualização
     if (data.email !== user.email) {
-      const userExists = await User.findOne({ where: { email: data.email } })
-      if (userExists) response.status(400).json({ error: 'User already exists.' })
+      const emailExists = await User.findOne({ where: { email: data.email } })
+      if (emailExists) response.status(400).json({ error: 'The email already exists in the database.' })
     }
 
     // Verificando se a senha é a mesma cadastrada no banco de dados
@@ -61,28 +63,14 @@ class UserController {
     }
 
     // Atualizando e retornando os dados do usuário
-    const { name, email } = await user.update(request.body)
+    const { name, email, avatar_id } = await user.update(request.body)
 
     // Retornando dados
     return response.json({
       name,
-      email
+      email,
+      avatar_id
     })
-  }
-
-  async index (request, response) {
-    // Listagem de usuários
-    return response.json()
-  }
-
-  async show (request, response) {
-    // Exibir um único usuário
-    return response.json()
-  }
-
-  async delete (request, response) {
-    // Remover usuário
-    return response.json()
   }
 }
 
