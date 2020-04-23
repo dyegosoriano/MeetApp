@@ -22,6 +22,16 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
+      avatar_id: {
+        type: Sequelize.INTEGER,
+        references: { // Referenciando com a tabela de arquivos
+          model: 'files',
+          key: 'id'
+        },
+        onUpdate: 'CASCADE',
+        onDelete: 'CASCADE',
+        allowNull: true
+      },
       created_at: {
         type: Sequelize.DATE,
         allowNull: false
@@ -33,7 +43,7 @@ module.exports = {
     })
   },
 
-  down: (queryInterface, Sequelize) => {
-    return queryInterface.dropTable('users')
+  down: queryInterface => {
+    return queryInterface.dropTable('users', 'avatar_id')
   }
 }
