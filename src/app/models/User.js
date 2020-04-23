@@ -7,6 +7,7 @@ class User extends Model {
       {
         name: Sequelize.STRING,
         email: Sequelize.STRING,
+        avatar_id: Sequelize.INTEGER,
         password: Sequelize.VIRTUAL, // Campo virtual
         password_has: Sequelize.STRING
       },
@@ -22,6 +23,11 @@ class User extends Model {
 
     // Retornando o Model criado
     return this
+  }
+
+  // Relacionando model User com model File
+  static associate (models) {
+    this.belongsTo(models.File, { foreignKey: 'avatar_id' })
   }
 
   // Método de verificação de senha

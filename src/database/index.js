@@ -14,11 +14,14 @@ class Database {
   }
 
   init () {
-    // conectando com banco de dados
+    // Conectando com banco de dados
     this.connection = new Sequelize(databaseConfig)
 
-    // conectando models com banco de dados
-    models.map((model) => model.init(this.connection))
+    models
+    // Conectando models com banco de dados
+      .map((model) => model.init(this.connection))
+    // Chamando método de associação
+      .map(model => { model.associate && model.associate(this.connection.models) })
   }
 }
 
