@@ -17,7 +17,7 @@ module.exports = {
         type: Sequelize.STRING,
         allowNull: false
       },
-      location: {
+      adress: {
         type: Sequelize.STRING,
         allowNull: false
       },
@@ -50,7 +50,7 @@ module.exports = {
         allowNull: false,
         defaultValue: []
       },
-      cancelet_at: {
+      canceled_at: {
         type: Sequelize.DATE,
         allowNull: true
       },

@@ -8,8 +8,6 @@ class MeetupController {
   async store (request, response) {
     // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
     const user = await User.findByPk(request.userId)
-    // Verificando existência de usuário
-    if (!user) return response.status(400).json({ error: 'User not found' })
 
     const { banner_id, title, description, location, date } = request.body
 
@@ -42,14 +40,12 @@ class MeetupController {
       date
     })
 
-    return response.status(400).json(meetup)
+    return response.json(meetup)
   }
 
   async update (request, response) {
     // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
     const user = await User.findByPk(request.userId)
-    // Verificando existência de usuário
-    if (!user) return response.status(400).json({ error: 'User does not exist' })
 
     // Verificando existência de Meetup e autorização de update
     const meetup = await Meetup.findByPk(request.params.meetup_id)
@@ -69,13 +65,11 @@ class MeetupController {
 
   async index (request, response) {
     // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
-    const user = await User.findByPk(request.userId)
-    // Verificando existência de usuário
-    if (!user) return response.status(400).json({ error: 'User does not exist' })
+    const user = await User.findByPk(request.userId, {
+      include: { association: 'meetups' }
+    })
 
-    const meetups = await Meetup.findAll({ where: { user_id: user.id } })
-
-    return response.status(400).json(meetups)
+    return response.json(user.meetups)
   }
 }
 
