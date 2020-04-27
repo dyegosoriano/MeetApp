@@ -6,12 +6,12 @@ import File from '../models/File'
 
 class MeetupController {
   async store (request, response) {
-    const { user_id } = request.params
-    const { title, description, location, date, banner_id } = request.body
-
+    // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
+    const user = await User.findByPk(request.userId)
     // Verificando existência de usuário
-    const user = await User.findByPk(user_id)
-    if (!user) response.status(400).json({ error: 'User not found' })
+    if (!user) return response.status(400).json({ error: 'User not found' })
+
+    const { banner_id, title, description, location, date } = request.body
 
     // Validando campos de entrada com Yup
     const schema = Yup.object().shape({
@@ -23,27 +23,40 @@ class MeetupController {
     })
 
     // Tratamento de erro de validação do Yup
-    if (!(await schema.isValid(request.body))) response.status(400).json({ error: 'Validations fails' })
+    if (!(await schema.isValid(request.body))) {
+      return response.status(400).json({ error: 'Validations fails' })
+    }
 
     // Verificando existência de banner no banco de dados
-    const file = await File.findByPk(banner_id)
-    if (!file) response.status(400).json({ error: 'File not found' })
+    if (!(await File.findByPk(banner_id))) {
+      return response.status(400).json({ error: 'File not found' })
+    }
 
     // Cadastrando Meetup
-    const meetup = await Meetup.create({ user_id, banner_id, title, description, location, date })
+    const meetup = await Meetup.create({
+      user_id: user.id,
+      banner_id,
+      title,
+      description,
+      location,
+      date
+    })
 
-    return response.json(meetup)
+    return response.status(400).json(meetup)
   }
 
   async update (request, response) {
+    // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
+    const user = await User.findByPk(request.userId)
     // Verificando existência de usuário
-    const user = await User.findByPk(request.params.user_id)
-    if (!user) return response.status(400).json({ error: 'User not found' })
+    if (!user) return response.status(400).json({ error: 'User does not exist' })
 
-    // Verificando existência de Meetup
+    // Verificando existência de Meetup e autorização de update
     const meetup = await Meetup.findByPk(request.params.meetup_id)
     if (!meetup) return response.status(400).json({ error: 'Meetup does not exist' })
-    if (user.id !== meetup.user_id) return response.status(401).json({ error: 'User does not autorised' })
+    if (user.id !== meetup.user_id) {
+      return response.status(401).json({ error: 'User does not autorised' })
+    }
 
     // Verificando existência de Meetup
     const banner = await File.findByPk(request.body.banner_id)
@@ -51,17 +64,18 @@ class MeetupController {
 
     const meetupUpdate = await meetup.update(request.body)
 
-    return response.json(meetupUpdate)
+    return response.status(400).json(meetupUpdate)
   }
 
   async index (request, response) {
+    // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
+    const user = await User.findByPk(request.userId)
     // Verificando existência de usuário
-    const user_id = await User.findByPk(request.params.user_id)
-    if (!user_id) return response.status(400).json({ error: 'User not found' })
+    if (!user) return response.status(400).json({ error: 'User does not exist' })
 
-    const meetups = await Meetup.findAll({ where: user_id })
+    const meetups = await Meetup.findAll({ where: { user_id: user.id } })
 
-    return response.json(meetups)
+    return response.status(400).json(meetups)
   }
 }
 
