@@ -53,6 +53,16 @@ class MeetupController {
 
     return response.json(meetupUpdate)
   }
+
+  async index (request, response) {
+    // Verificando existência de usuário
+    const user_id = await User.findByPk(request.params.user_id)
+    if (!user_id) return response.status(400).json({ error: 'User not found' })
+
+    const meetups = await Meetup.findAll({ where: user_id })
+
+    return response.json(meetups)
+  }
 }
 
 export default new MeetupController()
