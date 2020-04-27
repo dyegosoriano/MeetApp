@@ -34,6 +34,25 @@ class MeetupController {
 
     return response.json(meetup)
   }
+
+  async update (request, response) {
+    // Verificando existência de usuário
+    const user = await User.findByPk(request.params.user_id)
+    if (!user) return response.status(400).json({ error: 'User not found' })
+
+    // Verificando existência de Meetup
+    const meetup = await Meetup.findByPk(request.params.meetup_id)
+    if (!meetup) return response.status(400).json({ error: 'Meetup does not exist' })
+    if (user.id !== meetup.user_id) return response.status(401).json({ error: 'User does not autorised' })
+
+    // Verificando existência de Meetup
+    const banner = await File.findByPk(request.body.banner_id)
+    if (!banner) return response.status(400).json({ error: 'Banner does not exist' })
+
+    const meetupUpdate = await meetup.update(request.body)
+
+    return response.json(meetupUpdate)
+  }
 }
 
 export default new MeetupController()

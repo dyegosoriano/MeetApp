@@ -16,8 +16,11 @@ routes.post('/users', UserController.store)
 routes.post('/sessions', SessionController.store)
 
 routes.use(authMiddleware)
+
 routes.put('/users', UserController.update)
+
 routes.post('/users/:user_id/meetups', MeetupController.store)
+routes.put('/users/:user_id/meetups/:meetup_id', MeetupController.update)
 
 routes.post('/files', upload.single('file'), FileController.store)
 
