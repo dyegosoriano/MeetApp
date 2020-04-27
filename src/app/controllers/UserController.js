@@ -1,6 +1,7 @@
 import * as Yup from 'yup'
 
 import User from '../models/User'
+import File from '../models/File'
 
 class UserController {
   async store (request, response) {
@@ -13,6 +14,13 @@ class UserController {
 
     // Tratamento de erro de validação do Yup
     if (!(await schema.isValid(request.body))) response.status(400).json({ error: 'Validations fails' })
+
+    // Verificando existência do avatar no banco de dados
+    const avatarExist = await File.findByPk(request.body.avatar_id)
+
+    if (!avatarExist && request.body.avatar_id) {
+      return response.status(400).json({ error: 'Avatar does not exist' })
+    }
 
     // Verificando se usuário ja existe
     const emailExist = await User.findOne({ where: { email: request.body.email } })
@@ -28,11 +36,11 @@ class UserController {
   }
 
   async update (request, response) {
-    // Buscando dados da requisição
-    const data = request.body
-
     // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
     const user = await User.findByPk(request.userId)
+
+    // Buscando dados da requisição
+    const data = request.body
 
     // Validando campos de entrada
     const schema = Yup.object().shape({
@@ -47,7 +55,7 @@ class UserController {
     })
 
     // Tratamento de erro de validação do Yup
-    if (!(await schema.isValid(request.body))) {
+    if (!(await schema.isValid(data))) {
       return response.status(400).json({ error: 'Validations fails' })
     }
 
@@ -60,6 +68,13 @@ class UserController {
     // Verificando se a senha é a mesma cadastrada no banco de dados
     if (data.oldPassword && !(await user.checkPassword(data.oldPassword))) {
       return response.status(400).json({ error: 'Password does not match' })
+    }
+
+    // Verificando existência do avatar no banco de dados
+    const avatarExist = await File.findByPk(request.body.avatar_id)
+
+    if (!avatarExist && request.body.avatar_id) {
+      return response.status(400).json({ error: 'Avatar does not exist' })
     }
 
     // Atualizando e retornando os dados do usuário
