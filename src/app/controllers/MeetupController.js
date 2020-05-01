@@ -1,4 +1,5 @@
 import * as Yup from 'yup'
+import { subDays, isBefore } from 'date-fns'
 
 import User from '../models/User'
 import Meetup from '../models/Meetup'
@@ -122,14 +123,25 @@ class MeetupController {
           .json({ error: 'Meetup does not exist' })
           .status(400)
       }
+
       if (meetup.canceled_at) {
         return response
           .json({ error: 'This meetapp was already canceled!' })
           .status(400)
       }
+
       if (user.id !== meetup.user_id) {
         return response
           .json({ error: 'User does not autorised' })
+          .status(401)
+      }
+
+      // Regra que impossibilita o cancelamento do agendamento com limite de 3 dias antes
+      const dateWithSub = subDays(meetup.date, 3)
+
+      if (isBefore(dateWithSub, new Date())) {
+        return response
+          .json({ error: 'You can only cancel appointments 3 days in advance.' })
           .status(401)
       }
 
