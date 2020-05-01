@@ -5,7 +5,7 @@ import Meetup from '../models/Meetup'
 import File from '../models/File'
 
 class MeetupController {
-  async store (request, response) {
+  async store (request, response, next) {
     try {
       // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
       const user = await User.findByPk(request.userId)
@@ -47,7 +47,7 @@ class MeetupController {
     }
   }
 
-  async update (request, response) {
+  async update (request, response, next) {
     try {
       // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
       const user = await User.findByPk(request.userId)
@@ -71,7 +71,7 @@ class MeetupController {
     }
   }
 
-  async index (request, response) {
+  async index (request, response, next) {
     try {
       // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
       const user = await User.findByPk(request.userId, {
@@ -81,6 +81,28 @@ class MeetupController {
       return response.json(user.meetups)
     } catch (error) {
       return response.json(error)
+    }
+  }
+
+  async delete (request, response, next) {
+    try {
+      // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
+      const user = await User.findByPk(request.userId)
+
+      // Verificando existência de Meetup e autorização de usuário
+      const meetup = await Meetup.findByPk(request.params.id)
+
+      if (!meetup) response.status(400).json({ error: 'Meetup does not exist' })
+      if (meetup.canceled_at) response.status(400).json({ error: 'This meetapp was already canceled!' })
+      if (user.id !== meetup.user_id) response.status(401).json({ error: 'User does not autorised' })
+
+      // Adicionando data e horario de cancelamento
+      meetup.canceled_at = new Date()
+      await meetup.save()
+
+      return response.json(meetup)
+    } catch (error) {
+      return response.status(400).json(error)
     }
   }
 }
