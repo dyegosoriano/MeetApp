@@ -4,7 +4,10 @@ import User from '../models/User'
 import File from '../models/File'
 
 class UserController {
-  async store (request, response) {
+  async store (request, response, next) {
+    // Buscando dados da requisição
+    const { name, email, password, avatar_id } = request.body
+
     // Validando campos de entrada com Yup
     const schema = Yup.object().shape({
       name: Yup.string().required(),
@@ -12,80 +15,124 @@ class UserController {
       password: Yup.string().required().min(6)
     })
 
-    // Tratamento de erro de validação do Yup
-    if (!(await schema.isValid(request.body))) response.status(400).json({ error: 'Validations fails' })
+    try {
+      // Tratamento de erro de validação do Yup
+      if (!(await schema.isValid(request.body))) {
+        return response
+          .json({ error: 'Validations fails' })
+          .status(400)
+      }
 
-    // Verificando existência do avatar no banco de dados
-    const avatarExist = await File.findByPk(request.body.avatar_id)
+      // Verificando existência do avatar no banco de dados
+      const avatarExist = await File.findByPk(avatar_id)
+      if (!avatarExist && avatar_id) {
+        return response
+          .json({ error: 'Avatar does not exist' })
+          .status(400)
+      }
 
-    if (!avatarExist && request.body.avatar_id) {
-      return response.status(400).json({ error: 'Avatar does not exist' })
+      // Verificando se usuário ja existe
+      const emailExist = await User.findOne({ where: { email } })
+      if (emailExist) {
+        return response
+          .json({ error: 'The email already exists in the database.' })
+          .status(400)
+      }
+
+      // Cadastrando usuário
+      const user = await User.create({
+        name,
+        email,
+        password,
+        avatar_id
+      })
+
+      return response.json({
+        id: user.id,
+        avatar_id: user.avatar_id,
+        name: user.name,
+        email: user.email
+      })
+    } catch (error) {
+      next(error)
     }
-
-    // Verificando se usuário ja existe
-    const emailExist = await User.findOne({ where: { email: request.body.email } })
-    if (emailExist) response.status(400).json({ error: 'The email already exists in the database.' })
-
-    // Cadastrando usuário
-    const { id, name, email } = await User.create(request.body)
-    return response.json({
-      id,
-      name,
-      email
-    })
   }
 
-  async update (request, response) {
-    // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
-    const user = await User.findByPk(request.userId)
-
+  async update (request, response, next) {
     // Buscando dados da requisição
-    const data = request.body
+    const { name, email, avatar_id, newPassword, newPasswordConfirm, oldPassword } = request.body
 
     // Validando campos de entrada
     const schema = Yup.object().shape({
       name: Yup.string(),
       email: Yup.string().email(),
       avatar_id: Yup.number(),
+      newPassword: Yup.string().min(6),
       oldPassword: Yup.string().min(6),
-      password: Yup.string().min(6)
-        .when('oldPassword', (oldPassword, field) => oldPassword ? field.required() : field),
-      confirmPassword: Yup.string()
-        .when('password', (password, field) => password ? field.required().oneOf([Yup.ref('password')]) : field)
+      newPasswordConfirm: Yup.string().min(6)
     })
 
     // Tratamento de erro de validação do Yup
-    if (!(await schema.isValid(data))) {
-      return response.status(400).json({ error: 'Validations fails' })
+    if (!(await schema.isValid(request.body))) {
+      return response
+        .json({ error: 'Validations fails' })
+        .status(400)
     }
 
-    // Vefiricando a existência do email no banco de dados para atualização
-    if (data.email !== user.email) {
-      const emailExists = await User.findOne({ where: { email: data.email } })
-      if (emailExists) response.status(400).json({ error: 'The email already exists in the database.' })
+    // Validação de nova senha com senha de confirmação
+    if (newPassword !== newPasswordConfirm) {
+      return response
+        .json({ error: 'The confirmation password does not match the new password' })
+        .status(400)
     }
 
-    // Verificando se a senha é a mesma cadastrada no banco de dados
-    if (data.oldPassword && !(await user.checkPassword(data.oldPassword))) {
-      return response.status(400).json({ error: 'Password does not match' })
+    try {
+      // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
+      const user = await User.findByPk(request.userId)
+
+      // Vefiricando a existência do email no banco de dados para atualização
+      if (email !== user.email) {
+        const emailExists = await User.findOne({ where: { email } })
+
+        if (emailExists) {
+          return response
+            .json({ error: 'The email already exists in the database.' })
+            .status(400)
+        }
+      }
+
+      // Verificando se a senha é a mesma cadastrada no banco de dados
+      if (oldPassword && !(await user.checkPassword(oldPassword))) {
+        return response
+          .json({ error: 'Password does not match' })
+          .status(400)
+      }
+
+      // Verificando existência do avatar no banco de dados
+      const avatarExist = await File.findByPk(avatar_id)
+      if (!avatarExist && avatar_id) {
+        return response
+          .json({ error: 'Avatar does not exist' })
+          .status(400)
+      }
+
+      // Atualizando e retornando os dados do usuário
+      await user.update({
+        name,
+        email,
+        avatar_id,
+        password: newPassword
+      })
+
+      // Retornando dados
+      return response.json({
+        name,
+        email,
+        avatar_id
+      })
+    } catch (error) {
+      next(error)
     }
-
-    // Verificando existência do avatar no banco de dados
-    const avatarExist = await File.findByPk(request.body.avatar_id)
-
-    if (!avatarExist && request.body.avatar_id) {
-      return response.status(400).json({ error: 'Avatar does not exist' })
-    }
-
-    // Atualizando e retornando os dados do usuário
-    const { name, email, avatar_id } = await user.update(request.body)
-
-    // Retornando dados
-    return response.json({
-      name,
-      email,
-      avatar_id
-    })
   }
 }
 
