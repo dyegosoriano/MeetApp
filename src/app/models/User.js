@@ -27,7 +27,7 @@ class User extends Model {
   // Relacionando model User com model File
   static associate (models) {
     // belongsTo -> relação 1 para 1
-    this.belongsTo(models.File, { foreignKey: 'avatar_id' })
+    this.belongsTo(models.File, { foreignKey: 'avatar_id', as: 'avatar' })
     // hasMany -> relação 1 para N
     this.hasMany(models.Meetup, { foreignKey: 'user_id', as: 'meetups' })
   }

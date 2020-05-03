@@ -15,15 +15,20 @@ const upload = multer(multerConfig)
 routes
   .post('/users', UserController.store)
   .post('/sessions', SessionController.store)
+
   // Autenticação JWT
   .use(authMiddleware)
+
   // Users
   .put('/users', UserController.update)
+
   // Meetups
   .get('/meetups', MeetupController.index)
+  .get('/meetups/:id', MeetupController.show)
   .post('/meetups', MeetupController.store)
   .put('/meetups/:id', MeetupController.update)
   .delete('/meetups/:id', MeetupController.delete)
+
   // Files
   .post('/files', upload.single('file'), FileController.store)
 

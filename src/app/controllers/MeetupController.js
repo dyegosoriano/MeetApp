@@ -99,12 +99,40 @@ class MeetupController {
 
   async index (request, response, next) {
     try {
-      // Buscando id no banco de dados atraves do userId inserido pelo Middleware de autenticação
-      const user = await User.findByPk(request.userId, {
-        include: { association: 'meetups' }
+      const { page = 1 } = request.query
+
+      const meetups = await Meetup.findAll({
+        where: { canceled_at: null },
+        order: ['date'],
+        limit: 20,
+        offset: (page - 1) * 20,
+        attributes: ['id', 'date', 'description', 'adress'],
+        include: [
+          {
+            model: File,
+            as: 'banner',
+            attributes: ['url', 'name']
+          },
+          {
+            model: User,
+            as: 'owner',
+            attributes: ['id', 'name']
+          }
+        ]
       })
 
-      return response.json(user.meetups)
+      return response.json(meetups)
+    } catch (error) {
+      next(error)
+    }
+  }
+
+  async show (request, response, next) {
+    try {
+      const { id } = request.params
+      const meetup = await Meetup.findByPk(id)
+
+      return response.json(meetup)
     } catch (error) {
       next(error)
     }
