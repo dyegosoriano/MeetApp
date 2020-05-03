@@ -1,5 +1,6 @@
 import * as Yup from 'yup'
-import { subDays, isBefore } from 'date-fns'
+import { Op } from 'sequelize'
+import { subDays, isBefore, parseISO, startOfDay, endOfDay } from 'date-fns'
 
 import User from '../models/User'
 import Meetup from '../models/Meetup'
@@ -98,11 +99,18 @@ class MeetupController {
   }
 
   async index (request, response, next) {
-    try {
-      const { page = 1 } = request.query
+    const { page = 1, date } = request.query
 
+    const parsedDate = parseISO(date)
+    const startDay = startOfDay(parsedDate)
+    const endDay = endOfDay(parsedDate)
+
+    try {
       const meetups = await Meetup.findAll({
-        where: { canceled_at: null },
+        where: {
+          canceled_at: null,
+          date: { [Op.between]: [startDay, endDay] }
+        },
         order: ['date'],
         limit: 20,
         offset: (page - 1) * 20,
