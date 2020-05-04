@@ -77,6 +77,49 @@ class SubscriptionController {
       next(error)
     }
   }
+
+  async delete (request, response, next) {
+    try {
+      const { userId } = request
+      const { id } = request.params
+
+      const meetup = await Meetup.findOne({ where: { id } })
+
+      // Verificando existencia de meetup
+      if (!meetup) {
+        return response
+          .status(400)
+          .json({ error: 'Meetup does not exists' })
+      }
+
+      // Veridicando se meetup ainda esta disponível
+      if (meetup.date < new Date()) {
+        return response
+          .status(400)
+          .json({ erro: 'Meetup is already finished' })
+      }
+
+      // Verificando se suário esta inscrito
+      if (!meetup.subscribers.includes(userId)) {
+        return response
+          .status(400)
+          .json({ error: "User's not registered to the meetup" })
+      }
+
+      const removeSubscribers = subs => {
+        subs.splice(subs.indexOf(userId), 1)
+        return subs
+      }
+
+      const subscribers = removeSubscribers(meetup.subscribers)
+
+      await meetup.update({ subscribers })
+
+      return response.json(meetup)
+    } catch (error) {
+      next(error)
+    }
+  }
 }
 
 export default new SubscriptionController()

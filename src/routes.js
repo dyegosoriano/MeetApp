@@ -32,6 +32,7 @@ routes
 
 // Subscriptions
   .post('/subscriptions/:id', SubscriptionController.store)
+  .delete('/subscriptions/:id', SubscriptionController.delete)
 
   // Files
   .post('/files', upload.single('file'), FileController.store)
